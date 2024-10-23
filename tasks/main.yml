@@ -1,0 +1,58 @@
+---
+
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install docker and docker-compose
+  become: true
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose
+
+- name: Create user {{ koord2ool_user }}
+  become: true
+  ansible.builtin.user:
+    name: '{{ koord2ool_user }}'
+    home: '{{ koord2ool_basepath }}'
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Copy .env
+  ansible.builtin.template:
+    src: templates/.env.j2
+    dest: "{{ koord2ool_basepath }}/.env"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+
+- name: Copy nginx config
+  ansible.builtin.template:
+    src: templates/nginx_koord2ool.conf.j2
+    dest: "{{ koord2ool_basepath }}/dev/nginx_vhost.conf"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+
+- name: Copy docker compose file
+  ansible.builtin.template:
+    src: templates/docker-compose.yml.j2
+    dest: "{{ koord2ool_basepath }}/docker-compose.yml"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+
+- name: Run docker-compose up
+  ansible.builtin.command:
+    cmd: docker-compose up
+    chdir: "{{ koord2ool_basepath }}"
+
+# API magic
+
+- name: Copy surveys to remote host
+  ansible.builtin.copy:
+    src: files/{{ item }}
+    dest: "{{ koord2ool_basepath }}/{{ item }}"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+  with_items: "{{ koord2ool_survey_lsa_files }}"
