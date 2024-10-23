@@ -21,6 +21,15 @@
     shell: /usr/sbin/nologin
     create_home: false
 
+- name: Ensure directories exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ koord2ool_basepath }}"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+    state: directory
+    recurse: true
+
 - name: Copy .env
   ansible.builtin.template:
     src: templates/.env.j2
@@ -28,10 +37,17 @@
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
 
+- name: Copy config.php
+  ansible.builtin.template:
+    src: templates/config-defaults.php.j2
+    dest: "{{ koord2ool_basepath }}/config-defaults.php"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+
 - name: Copy nginx config
   ansible.builtin.template:
     src: templates/nginx_koord2ool.conf.j2
-    dest: "{{ koord2ool_basepath }}/dev/nginx_vhost.conf"
+    dest: "{{ koord2ool_basepath }}/nginx_vhost.conf"
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
 
@@ -44,7 +60,7 @@
 
 - name: Run docker-compose up
   ansible.builtin.command:
-    cmd: docker-compose up
+    cmd: docker-compose up -d
     chdir: "{{ koord2ool_basepath }}"
 
 # API magic
