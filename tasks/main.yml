@@ -5,14 +5,14 @@
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
-
-- name: Install docker and docker-compose
+ 
+- name: Install Docker and Docker Compose
   become: true
   ansible.builtin.apt:
     name:
       - docker.io
       - docker-compose
-
+ 
 - name: Create user {{ koord2ool_user }}
   become: true
   ansible.builtin.user:
@@ -20,7 +20,7 @@
     home: '{{ koord2ool_basepath }}'
     shell: /usr/sbin/nologin
     create_home: false
-
+ 
 - name: Ensure directories exist
   become: true
   ansible.builtin.file:
@@ -29,18 +29,26 @@
     group: "{{ koord2ool_user }}"
     state: directory
     recurse: true
+ 
+- name: Authenticate with GitHub Container Registry
+  become: true
+  ansible.builtin.shell: >
+    echo "{{ koord2ool_github_pat }}" | docker login ghcr.io -u ait-cs-iaas --password-stdin
+  environment:
+    DOCKER_CONFIG: /root/.docker  
+ 
+- name: Pull LimeSurvey image from GitHub Container Registry
+  become: true
+  ansible.builtin.shell: docker pull ghcr.io/ait-cs-iaas/limesurvey:latest
+ 
+- name: Pull PostgreSQL image from Docker Hub
+  become: true
+  ansible.builtin.shell: docker pull postgres:17
 
 - name: Copy .env
   ansible.builtin.template:
     src: templates/.env.j2
     dest: "{{ koord2ool_basepath }}/.env"
-    owner: "{{ koord2ool_user }}"
-    group: "{{ koord2ool_user }}"
-
-- name: Copy config.php
-  ansible.builtin.template:
-    src: templates/config-defaults.php.j2
-    dest: "{{ koord2ool_basepath }}/config-defaults.php"
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
 
@@ -57,7 +65,7 @@
     dest: "{{ koord2ool_basepath }}/docker-compose.yml"
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
-
+ 
 - name: Run docker-compose up
   ansible.builtin.command:
     cmd: docker-compose up -d
@@ -72,3 +80,11 @@
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
   with_items: "{{ koord2ool_survey_lsa_files }}"
+
+- name: Copy survey manager to remote host
+  ansible.builtin.copy:
+    src: files/survey_manager.py
+    dest: "{{ koord2ool_basepath }}/survey_manager.py"
+    owner: "{{ koord2ool_user }}"
+    group: "{{ koord2ool_user }}"
+    mode: "a+x"

@@ -8,9 +8,12 @@ koord2ool_ssl_key: /etc/ssl/server.key
 koord2ool_entry_point: 8080
 koord2ool_lime_rpc_api: https://limesurvey.cyberrange.at/index.php/admin/remotecontrol
 koord2ool_port: 8081
+koord2ool_lime_admin_user: admin
 koord2ool_lime_admin_password: koord2ool_password
 koord2ool_lime_admin_email: koord2ool@cyberrange.at
 koord2ool_lime_public_url: https://limesurvey.cyberrange.at
 koord2ool_lime_port: 8082
 
 koord2ool_survey_lsa_files: []
+
+koord2ool_github_pat: "{{ lookup('env', 'GITHUB_PAT') }}"

@@ -23,7 +23,7 @@ services:
       - "${KOORDTOOL_PORT:-8081}:80"
 
   limesurvey:
-    image: martialblog/limesurvey:latest
+    image: ghcr.io/ait-cs-iaas/limesurvey:latest
     restart: always
     environment:
       - DB_TYPE=pgsql
@@ -37,16 +37,16 @@ services:
       - ADMIN_PASSWORD=${LIME_ADMIN_PASSWORD:-example}
       - ADMIN_EMAIL=${LIME_ADMIN_EMAIL:-admin@example.com}
       - PUBLIC_URL=${LIME_PUBLIC_URL:-localhost:8080}
+      - RPC_INTERFACE=json
     volumes:
       - limesurvey:/var/www/html/upload/surveys
-      - {{ koord2ool_basepath }}/config-defaults.php:/var/www/html/application/config/config-defaults.php:rw
     ports:
       - ${LIME_PORT:-8082}:8080
     depends_on:
       - db
 
   db:
-    image: postgres:13
+    image: postgres:17
     restart: always
     volumes:
       - db-data:/var/lib/postgresql
