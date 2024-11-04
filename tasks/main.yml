@@ -88,3 +88,9 @@
     owner: "{{ koord2ool_user }}"
     group: "{{ koord2ool_user }}"
     mode: "a+x"
+
+- name: Create users
+  ansible.builtin.shell:
+    cmd: "{{ koord2ool_basepath }}/survey_manager.py add-participants -sid 935485 -p '{{ koord2ool_survey_users | to_json }}'"
+    chdir: "{{ koord2ool_basepath }}"
+

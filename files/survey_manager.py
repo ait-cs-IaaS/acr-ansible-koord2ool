@@ -4,6 +4,7 @@ import requests
 import json
 import click
 import os
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,13 +38,14 @@ def send_command(session_key, method_name, params):
 
 def upload_survey(session_key, survey_id, lsa_file_path):
     with open(lsa_file_path, "rb") as lsa_file:
-        files = {"upload": lsa_file}
+        data_binary = lsa_file.read()
+        survey_data = (base64.b64encode(data_binary)).decode('ascii')
         payload = {
-            "method": "import_archive",
-            "params": [session_key, survey_id, "lsa"],
+            "method": "import_survey",
+            "params": [session_key, survey_data, "lsa", "KSÖ Planspiel Survey", survey_id],
             "id": 1,
         }
-        response = requests.post(API_URL, files=files, json=payload)
+        response = requests.post(API_URL, json=payload)
         return response.json()
 
 
@@ -103,7 +105,7 @@ def add_participants(survey_id, participants):
 
     participants_data = json.loads(participants)
     result = send_command(
-        session_key, "add_participants", [survey_id, participants_data]
+        session_key, "add_participants", [survey_id, participants_data, False]
     )
     print(json.dumps(result, indent=2))
 
